@@ -8,14 +8,14 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    insertValue();
+    nIndex = 0;
 
     ui->plot->addGraph();
     ui->plot->graph(0)->setData(vec_x, vec_y);
     ui->plot->xAxis->setLabel("x");
     ui->plot->yAxis->setLabel("y");
 
-    ui->plot->xAxis->setRange(0,10);
+    ui->plot->xAxis->setRange(0,30);
     ui->plot->yAxis->setRange(0,20);
 
     ui->plot->graph(0)->setLineStyle(QCPGraph::lsLine);
@@ -40,8 +40,15 @@ MainWindow::MainWindow(QWidget *parent) :
     itemText->setBrush(QColor(255,255,255));
 
     m_ItemText = itemText;
+    m_ItemText->setVisible(false);
     connect(ui->plot, SIGNAL(plottableClick(QCPAbstractPlottable*,int,QMouseEvent*)), this, SLOT(Slot_clickGraph(QCPAbstractPlottable*,int, QMouseEvent*)));
+    connect(ui->pbStop, SIGNAL(clicked()), &timer, SLOT(stop()));
 
+    qsrand(QTime::currentTime().msec());
+    connect(&timer, SIGNAL(timeout()),this,SLOT(Slot_addData()));
+    timer.start(100);
+
+    ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables | QCP::iSelectAxes | QCP::iSelectLegend);
     ui->plot->replot();
 }
 
@@ -51,19 +58,33 @@ void MainWindow::insertValue()
     vec_y.clear();
 
     qsrand(QTime::currentTime().msec());
-    for(int i = 0; i < 10 ; i++) {
+    for(int i = 0; i <= 10 ; i++) {
         int nRand = qrand() % 11;
         vec_x.append(i);
         vec_y.append(nRand);
+        nIndex = i;
     }
+
 }
 
 void MainWindow::Slot_clickGraph(QCPAbstractPlottable* potItem, int num, QMouseEvent* event)
 {
     double dX = potItem->interface1D()->dataMainKey(num);
     double dY = potItem->interface1D()->dataMainValue(num);
+    m_ItemText->setVisible(true);
 
     m_ItemText->setText(QString("Point Information\nX = %1\nY = %2").arg(QString::number(dX)).arg(QString::number(dY)));
+    ui->plot->replot();
+}
+
+void MainWindow::Slot_addData()
+{
+    int nRand = qrand() % 11;
+    ui->plot->graph(0)->addData(nIndex++, nRand);
+    if ( nIndex >= 20 ) {
+        ui->plot->xAxis->moveRange(1);
+    }
+
     ui->plot->replot();
 }
 
