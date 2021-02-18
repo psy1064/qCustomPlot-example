@@ -11,23 +11,23 @@ MainWindow::MainWindow(QWidget *parent) :
     nIndex = 0;
 
     ui->plot->addGraph();
-    ui->plot->graph(0)->setData(vec_x, vec_y);
+
     ui->plot->xAxis->setLabel("x");
-    ui->plot->yAxis->setLabel("y");
+    ui->plot->yAxis->setLabel("y");     // 축 이름 설정
 
     ui->plot->xAxis->setRange(0,30);
-    ui->plot->yAxis->setRange(0,20);
+    ui->plot->yAxis->setRange(0,20);    // 축 범위 설정
 
-    ui->plot->graph(0)->setLineStyle(QCPGraph::lsLine);
-    ui->plot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle,10));
+    ui->plot->graph(0)->setLineStyle(QCPGraph::lsLine);         // 그래프 종류
+    ui->plot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle,10));     // 그래프 좌표 데이터 포인트 설정
 
     QPen pen;
     pen.setColor(QColor(255,0,0));
     pen.setWidth(2);
-    ui->plot->graph(0)->setPen(pen);
+    ui->plot->graph(0)->setPen(pen);            // 그래프 색, 굵기 설정
 
     ui->plot->graph(0)->setName("linear function");
-    ui->plot->legend->setVisible(true);
+    ui->plot->legend->setVisible(true);         // 범례
 
     QCPItemText* itemText = new QCPItemText(ui->plot);
     itemText->setLayer("overlay");
@@ -36,19 +36,22 @@ MainWindow::MainWindow(QWidget *parent) :
     itemText->position->setCoords(0.5,0.1);
     itemText->setText("Point Information\n");
     itemText->setPadding(QMargins(5,5,5,5));
-    itemText->setPen(QPen(Qt::black)); // show black border around text
-    itemText->setBrush(QColor(255,255,255));
-
+    itemText->setPen(QPen(Qt::black));
+    itemText->setBrush(QColor(255,255,255));        // 데이터 정보 창
     m_ItemText = itemText;
     m_ItemText->setVisible(false);
+
+    ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables | QCP::iSelectAxes | QCP::iSelectLegend);
+    // 그래프 상호작용 설정
+
     connect(ui->plot, SIGNAL(plottableClick(QCPAbstractPlottable*,int,QMouseEvent*)), this, SLOT(Slot_clickGraph(QCPAbstractPlottable*,int, QMouseEvent*)));
+    // 그래프 클릭 signal / slot
     connect(ui->pbStop, SIGNAL(clicked()), &timer, SLOT(stop()));
 
     qsrand(QTime::currentTime().msec());
     connect(&timer, SIGNAL(timeout()),this,SLOT(Slot_addData()));
     timer.start(100);
 
-    ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables | QCP::iSelectAxes | QCP::iSelectLegend);
     ui->plot->replot();
 }
 
