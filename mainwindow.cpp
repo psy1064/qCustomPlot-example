@@ -39,18 +39,20 @@ MainWindow::MainWindow(QWidget *parent) :
     itemText->setPen(QPen(Qt::black));
     itemText->setBrush(QColor(255,255,255));        // 데이터 정보 창
     m_ItemText = itemText;
-    m_ItemText->setVisible(false);
+//    m_ItemText->setVisible(false);
+    ui->plot->layer("overlay")->setVisible(false);
 
     ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables | QCP::iSelectAxes | QCP::iSelectLegend);
     // 그래프 상호작용 설정
 
     connect(ui->plot, SIGNAL(plottableClick(QCPAbstractPlottable*,int,QMouseEvent*)), this, SLOT(Slot_clickGraph(QCPAbstractPlottable*,int, QMouseEvent*)));
     // 그래프 클릭 signal / slot
-    connect(ui->pbStop, SIGNAL(clicked()), &timer, SLOT(stop()));
+    connect(ui->pbStop, SIGNAL(clicked()), this, SLOT(Slot_finAddData()));
 
     qsrand(QTime::currentTime().msec());
     connect(&timer, SIGNAL(timeout()),this,SLOT(Slot_addData()));
     timer.start(100);
+
 
     ui->plot->replot();
 }
@@ -74,9 +76,11 @@ void MainWindow::Slot_clickGraph(QCPAbstractPlottable* potItem, int num, QMouseE
 {
     double dX = potItem->interface1D()->dataMainKey(num);
     double dY = potItem->interface1D()->dataMainValue(num);
-    m_ItemText->setVisible(true);
+//    m_ItemText->setVisible(true);
+    ui->plot->layer("overlay")->setVisible(true);
 
     m_ItemText->setText(QString("Point Information\nX = %1\nY = %2").arg(QString::number(dX)).arg(QString::number(dY)));
+
     ui->plot->replot();
 }
 
@@ -87,8 +91,33 @@ void MainWindow::Slot_addData()
     if ( nIndex >= 20 ) {
         ui->plot->xAxis->moveRange(1);
     }
-
     ui->plot->replot();
+}
+
+void MainWindow::Slot_finAddData()
+{
+    timer.stop();
+
+    QFile file;
+    file.setFileName("C:/Users/psy10/Desktop/work/test.csv");
+    if( !file.open(QIODevice::ReadWrite)) qDebug() << "fail";
+
+    QString data = "";
+    data += ui->plot->xAxis->label();
+    data += ",";
+    data += ui->plot->yAxis->label();
+    data += "\n";
+
+    for (int i = 0 ; i < ui->plot->graph(0)->dataCount(); i++) {
+        QString xValue = QString::number(ui->plot->graph(0)->dataMainKey(i));
+        QString yValue = QString::number(ui->plot->graph(0)->dataMainValue(i));
+        data += xValue + "," + yValue + "\n";
+    }
+
+    qDebug() << data;
+    file.write(data.toLocal8Bit());
+
+    file.close();
 }
 
 MainWindow::~MainWindow()
